@@ -88,12 +88,24 @@ def exec_convert(input_file, output_file, from_encoding: str, to_encoding: str) 
 
         return result
 
+
+    elif sys.platform == 'darwin':
+        with open(output_file, 'wb') as f:
+            return subprocess.run(
+                ['iconv', '-f', from_encoding,
+                 '-t', to_encoding, input_file],
+                stdout=f,
+                check=True
+            )
     else:
-        return subprocess.run(['iconv',
-                               '--from-code', from_encoding,
-                               '--to-code', to_encoding,
-                               input_file,
-                               '--output', output_file], check=True)
+        return subprocess.run(
+            ['iconv',
+             '--from-code', from_encoding,
+             '--to-code', to_encoding,
+             input_file,
+             '--output', output_file],
+            check=True
+        )
 
 
 def convert(input_file, output_file, from_encoding, to_encoding):
