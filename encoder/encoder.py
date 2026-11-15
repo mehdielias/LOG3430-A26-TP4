@@ -69,12 +69,25 @@ def exec_convert(input_file, output_file, from_encoding: str, to_encoding: str) 
     from_encoding = from_encoding.strip().upper()
     to_encoding = to_encoding.strip().upper()
 
+
     if sys.platform == 'win32':
         from_encoding = map_to_windows_encoding(from_encoding)
         to_encoding = map_to_windows_encoding(to_encoding)
-        return subprocess.run(['powershell', '-Command',
-                               f'Get-Content "{input_file}" -Encoding {from_encoding} | Set-Content "{output_file}" -Encoding {to_encoding}'],
-                              check=True)
+        result = subprocess.run(
+            ['powershell', '-Command',
+             f'Get-Content "{input_file}" -Encoding {from_encoding} | Set-Content "{output_file}" -Encoding {to_encoding}'],
+            check=True
+        )
+
+        if to_encoding == 'utf8':
+            with open(output_file, 'rb') as f:
+                content = f.read()
+            if content.startswith(b'\xef\xbb\xbf'):
+                with open(output_file, 'wb') as f:
+                    f.write(content[3:])
+
+        return result
+
     else:
         return subprocess.run(['iconv',
                                '--from-code', from_encoding,
